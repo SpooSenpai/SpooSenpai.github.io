@@ -772,7 +772,7 @@
         }
 
         .image-preview {
-            max-width: 95vw;
+            max-width: min(1800px, 98vw);
             max-height: 95vh;
             width: auto;
             height: auto;
@@ -879,6 +879,21 @@
         .image-preview-container img.zoomable.zoomed {
             transform: scale(1.5);
             cursor: zoom-out;
+        }
+
+        @media (min-width: 1200px) {
+            .image-preview-container {
+                padding: 40px;
+            }
+
+            .image-preview {
+                    max-width: min(1600px, 98vw);
+                    max-height: 92vh;
+                }
+
+                .image-preview-container img.zoomable.zoomed {
+                    transform: scale(2);
+                }
         }
 
         /* === FOOTER === */
@@ -2202,18 +2217,27 @@
             // Add click event to gallery items
             allGalleryItems.forEach((item, index) => {
                 item.addEventListener('click', function(e) {
-                        // Don't open preview if clicking on an anchor with a real href (external/internal anchor links)
-                        // This ensures anchor gallery items (like osu! skins linking to osu.ppy.sh) navigate normally.
-                        if (this.tagName === 'A' && this.getAttribute('href') && !this.getAttribute('href').startsWith('#')) {
-                            return; // Allow default link behavior (follow the link)
-                        }
-                    
+                    const href = this.tagName === 'A' ? this.getAttribute('href') : null;
+
+                    // Special-case: allow osu! skin links to navigate (they should open osu.ppy.sh externally)
+                    if (href && href.includes('osu.ppy.sh')) {
+                        return; // follow the link
+                    }
+
+                    // If it's an anchor but also has a data-image (banner thumbnails), open the preview instead of navigating
+                    if (this.tagName === 'A' && href && this.getAttribute('data-image')) {
+                        // fall through to open preview
+                    } else if (this.tagName === 'A' && href && !href.startsWith('#')) {
+                        // Other links (external/internal anchors) should behave normally
+                        return;
+                    }
+
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     const imageSrc = this.getAttribute('data-image') || this.querySelector('img').src;
                     const title = this.getAttribute('data-title') || this.querySelector('.gallery-title')?.textContent || 'Image';
-                    
+
                     openPreview(imageSrc, title, index);
                 });
             });
